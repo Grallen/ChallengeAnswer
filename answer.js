@@ -5,6 +5,9 @@
 //
 //  Writen for node.js v0.10.13
 //
+//  Usage:
+//    node answer.js testdata_01.txt
+//
 //  Purpose:
 //    This script is an answer to a challenge question.  The question is appended at the end after the code.
 //
