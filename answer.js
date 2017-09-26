@@ -19,7 +19,7 @@
 //    Both skills are valuable in a programmer, but given the nature of the reason for doing
 //    this challenge, I chose to go with a more interesting approach.
 //    Due to time restrictions, this has not yet been tested with data outside the test data providede with the challenge.
-//    I expect bugs.  I willing to search/test for them if there is time.
+//    I expect bugs.  I am willing to search/test for them if there is time.
 //
 //  This was a very enjoyable puzzle.
 //
@@ -48,7 +48,8 @@ Network.prototype.build = function(initdata){
     this.addNode(initdata[i][0],initdata[i][1],initdata[i][2]);
   }
 }
-//Network:: Takes the node data and makes an object.  Adds it to the netnodes array and inrements node count.
+//Network::addNode()
+// Takes the node data and makes an object.  Adds it to the netnodes array and inrements node count.
 Network.prototype.addNode = function(nodename, targetname, distance){
   if(typeof this.netnodes[nodename] === 'undefined'){
     this.netnodes[nodename] = new NetNode(nodename);
@@ -60,7 +61,8 @@ Network.prototype.addNode = function(nodename, targetname, distance){
   }
   this.netnodes[nodename].addTarget(this.netnodes[targetname], distance);
 }
-//Network:: Can be user to print the contents of the network.
+//Network::printstr()
+// Can be used to print the contents of the network.
 Network.prototype.printstr = function(){
   var retstr = "";
   for(var i in this.netnodes){
@@ -72,8 +74,9 @@ Network.prototype.printstr = function(){
   retstr += NL;
   return retstr;
 }
-//Network:: Validates some simpel issues that could be wrong with the poth variable then passes it to the nodes route function that does the work.
-//(to return the total distance of the path)
+//Network::route()
+// Validates some simpel issues that could be wrong with the poth variable then passes it to the nodes route function that does the work.
+// (to return the total distance of the path)
 Network.prototype.route = function(path){
   if(path.length > 0 && typeof this.netnodes[path[0]] === 'undefined'){
     return "NO SUCH ROUTE";
@@ -83,7 +86,8 @@ Network.prototype.route = function(path){
     return this.netnodes[path[0]].route(path, 1, 0);
   }
 }
-//Network:: Passes the variables necessary to the seek function of the appropriet node.
+//Network::seek()
+// Passes the variables necessary to the seek function of the appropriet node.
 Network.prototype.seek = function(source, destination, die_funcs, keep_funcs){
   if(typeof this.netnodes[source] === 'undefined'){
     return "NO SOURCE";
@@ -92,16 +96,18 @@ Network.prototype.seek = function(source, destination, die_funcs, keep_funcs){
 }
 
 //NetNode
-//An object to hold the name of the node and the paths it has to other nodes.
+// An object to hold the name of the node and the paths it has to other nodes.
 function NetNode(name) {
   this.name = name;
   this.targets = [];
 }
-//NetNode:: This adds a path to annother node.
+//NetNode::addTarget()
+// This adds a path to annother node.
 NetNode.prototype.addTarget = function(target, distance){
   this.targets[target.name] = {"target":target,"distance":distance};
 };
-//NetNode:: This follows a given path from node to node and totals returns it's total distance.
+//NetNode::route()
+// This follows a given path from node to node and totals returns it's total distance.
 NetNode.prototype.route = function(path, hop, distance){
   if(path.length > (hop * 2)){
     var targetname = path[(hop*2)];
@@ -115,7 +121,8 @@ NetNode.prototype.route = function(path, hop, distance){
     return distance;
   }
 };
-//NetNode:: This performs a sweep of the Directed Graph using recursion
+//NetNode::seek()
+// This performs a sweep of the Directed Graph using recursion
 // It collectes data by validating the current path/distance/path/location using validator function (keep_funcs array)
 // It determing the swep is done by using path/distance/path/location with the kill function (die_functs array)
 NetNode.prototype.seek = function(results, current, destination, die_funcs, keep_funcs){
@@ -142,6 +149,7 @@ function keepIf(results, current, destination, keep_funcs){
   if(okay){ results.push(current); }
   return results;
 }
+
 //Helper function to process the die functions
 function dieIf(results, current, die_funcs){
   die = false;
@@ -159,12 +167,14 @@ function makeTTLDieFunc(ttl){
     return (current.hops >= ttl);
   }
 }
+
 //Die function to limit distance traveled
 function makeDTLDieFunc(dtl){
   return function(results, current) {
     return (current.distance >= dtl);
   }
 }
+
 //Die fundtion to prevent path longer than those already found from being considered.
 function shortestDieFunc(results, current){
   for(var i in results){
@@ -185,6 +195,7 @@ function makeTTLLTEKeepFunc(lte){
     return keep;
   }
 }
+
 //Keeper function to keep results of hops that are exactly the target number. (num)
 function makeTTLExactKeepFunc(num){
   return function(results, current) {
@@ -196,6 +207,7 @@ function makeTTLExactKeepFunc(num){
     return keep;
   }
 }
+
 //Keeper function to keep results where the distance is less than the target distance
 function makeDTLLTKeepFunc(lt){
   return function(results, current) {
@@ -207,8 +219,9 @@ function makeDTLLTKeepFunc(lt){
     return keep;
   }
 }
-//Keeper function to keep only the result with the shortest distance.  The keep breaks the previous plan by removing results itself.
-//Could replace the kludge part with a third sweep of functions that remove later invalidated results
+
+//Keeper function to keep only the result with the shortest distance.  This keeper breaks the previous plan by removing results itself.
+//Could replace the kludge with a third sweep of functions that remove invalidated results
 function makeKeepShortestKeepFunc(destination, otherKeepFuncs){
   return function(results, current) {
     var okay = false;
