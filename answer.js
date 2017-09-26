@@ -13,26 +13,49 @@
 //    can be used calculate distanes of pre-definded path or to seek paths withing the graph that fulfill certain
 //    criteria.  This criteria is controlled by the keeper and Die functions fed to the seek function.
 //
+//  Assumptions/Limitations:
+//    - Edge length in the directed graph are greater than zero.  It might be able to handle some zeroes, but too many in a loop will cause it to quickly exceede maximum stack.
+//    - There is only one edge joining two nodes (No "AB3, AB7").  The network is not designed to handle storing this.
+//      If this is done, the second value will overwrite the first.
+//    - Test data is properly formatted with no errors (No "AC5, AAQR, AB2").
+//
 //  Notes:
 //    This took 7 hours to code.
 //    I was torn initially between making a fast solution and a sophisticated one.
 //    Both skills are valuable in a programmer, but given the nature of the reason for doing
-//    this challenge, I chose to go with a more interesting approach.
-//    Due to time restrictions, this has not yet been tested with data outside the test data providede with the challenge.
-//    I expect bugs.  I am willing to search/test for them if there is time.
+//    this challenge, I chose to go with the more interesting approach.
+//    Due to time restrictions, this has NOT been extensivly tested with data outside the test data providede with the challenge.
+//    It would take a fair amount of time to concievecreate good test data.
+//    It would be nice to create validation for the test data to make sure it fits assumptions.
 //
 //  This was a very enjoyable puzzle.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+var fs = require('fs');
 var NL = require('os').EOL;
 
 //You can alter the data for the tests here.
-var testdata = "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
+//var testdata = "AB5, BC4, CD8, DC8, DE6, AD5, CE2, EB3, AE7";
 
+function main(){
+  //check if tests data defined. if not, exit
+  if(typeof process.argv[2] === 'undefined'){
+    console.log("Error: No test data provided." + NL);
+    console.log("Usage: node thisscript.js testdata.txt" + NL);
+    process.exit();
+  }
 
+  fs.readFile(process.argv[2], 'utf8', function (err,data) {
+    if (err) {
+      console.log("Error reading: ", process.argv[2]);
+      return console.log(err);
+      process.exit();
+    }
+    runtests(data);
+  });
+}
 
 //Network
 //object for holding the directed Graph has function to pass commands to the nodes
@@ -250,68 +273,69 @@ function makeKeepShortestKeepFunc(destination, otherKeepFuncs){
 
 
 //Code to run tests bellow
+function runtests(testdata){
+  var mynet = new Network(testdata);
+  var outputcount = 1;
 
-//Test Paths
-var paths = [
-  "A-B-C",
-  "A-D",
-  "A-D-C",
-  "A-E-B-C-D",
-  "A-E-D"
-];
-var mynet = new Network(testdata);
-var outputcount = 1;
+  //Test Paths (for tests 1-5())
+  var paths = [
+    "A-B-C",
+    "A-D",
+    "A-D-C",
+    "A-E-B-C-D",
+    "A-E-D"
+  ];
 
+  //Tests 1-5
+  for(var i = 0; i<paths.length; i++){
+    console.log("Output #" + (i+1) + ":  " + mynet.route(paths[i]));
+  }
+  var die_funcs = [];
+  var keep_funcs = [];
 
+  //Test 6
+  die_funcs = [];
+  die_funcs.push(makeTTLDieFunc(3));
+  keep_funcs = [];
+  keep_funcs.push(makeTTLLTEKeepFunc(3));
+  console.log("Output #6:  " + mynet.seek("C", "C", die_funcs, keep_funcs).length);
 
-//Tests 1-5
-for(var i = 0; i<paths.length; i++){
-  console.log("Output #" + (i+1) + ":  " + mynet.route(paths[i]));
+  //Test 7
+  die_funcs = [];
+  die_funcs.push(makeTTLDieFunc(4));
+  keep_funcs = [];
+  keep_funcs.push(makeTTLExactKeepFunc(4));
+  console.log("Output #7:  " + mynet.seek("A", "C", die_funcs, keep_funcs).length);
+
+  //Test 8
+  die_funcs = [];
+  die_funcs.push(makeTTLDieFunc(mynet.nodecount));
+  die_funcs.push(shortestDieFunc);
+  keep_funcs = [];
+  keep_funcs.push(makeKeepShortestKeepFunc("C", []));
+  console.log("Output #8:  " + mynet.seek("A", "C", die_funcs, keep_funcs)[0].distance);
+
+  //Test 9
+  die_funcs = [];
+  die_funcs.push(makeTTLDieFunc(mynet.nodecount));
+  die_funcs.push(shortestDieFunc);
+  keep_funcs = [];
+  keep_funcs.push(makeKeepShortestKeepFunc("B", []));
+  console.log("Output #9:  " + mynet.seek("B", "B", die_funcs, keep_funcs)[0].distance);
+
+  //Test 10
+  die_funcs = [];
+  die_funcs.push(makeDTLDieFunc(30));
+  keep_funcs = [];
+  keep_funcs.push(makeDTLLTKeepFunc(30));
+  var tenres = mynet.seek("C", "C", die_funcs, keep_funcs);
+  console.log("Output #10: " + tenres.length);
+
+  //console.log(mynet.printstr());
 }
-var die_funcs = [];
-var keep_funcs = [];
 
-//Test 6
-die_funcs = [];
-die_funcs.push(makeTTLDieFunc(3));
-keep_funcs = [];
-keep_funcs.push(makeTTLLTEKeepFunc(3));
-console.log("Output #6:  " + mynet.seek("C", "C", die_funcs, keep_funcs).length);
-
-//Test 7
-die_funcs = [];
-die_funcs.push(makeTTLDieFunc(4));
-keep_funcs = [];
-keep_funcs.push(makeTTLExactKeepFunc(4));
-console.log("Output #7:  " + mynet.seek("A", "C", die_funcs, keep_funcs).length);
-
-//Test 8
-die_funcs = [];
-die_funcs.push(makeTTLDieFunc(mynet.nodecount));
-die_funcs.push(shortestDieFunc);
-keep_funcs = [];
-keep_funcs.push(makeKeepShortestKeepFunc("C", []));
-console.log("Output #8:  " + mynet.seek("A", "C", die_funcs, keep_funcs)[0].distance);
-
-//Test 9
-die_funcs = [];
-die_funcs.push(makeTTLDieFunc(mynet.nodecount));
-die_funcs.push(shortestDieFunc);
-keep_funcs = [];
-keep_funcs.push(makeKeepShortestKeepFunc("B", []));
-console.log("Output #9:  " + mynet.seek("B", "B", die_funcs, keep_funcs)[0].distance);
-
-//Test 10
-die_funcs = [];
-die_funcs.push(makeDTLDieFunc(30));
-keep_funcs = [];
-keep_funcs.push(makeDTLLTKeepFunc(30));
-var tenres = mynet.seek("C", "C", die_funcs, keep_funcs);
-console.log("Output #10: " + tenres.length);
-
-
-//console.log(mynet.printstr());
-
+//Run Program
+main();
 
 
 
